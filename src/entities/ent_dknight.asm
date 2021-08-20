@@ -197,7 +197,8 @@ FP_MoveStates:
 	.addr MoveState_Stand
 	.addr MoveState_Jump
 	.addr MoveState_Fall
-
+	.addr MoveState_Recoil
+	
 MoveState_Stand:	; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
 ; Check for L/R and Jump inputs, switch state if needed.
 ; Check ground every frame and fall if the ground is gone.
@@ -264,6 +265,10 @@ MoveState_Fall:	; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; Check for grounded and update state if needed.
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 	jsr F_DKnightWalk
+
+MoveState_Recoil: ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+; Same as MoveState_Fall, but disable airwalk.
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 	jsr F_HMove
 	jsr F_ApplyGravity
 	jsr F_VMove
