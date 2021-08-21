@@ -632,8 +632,11 @@ F_EnemyPlayerTest:
 	lda Ent_Height
 	sta sh
 	
-	lda Ent_P1_Flags				;
-	bpl @checkP2
+	lda Ent_P1_Flags				; Only check collision if the player is 
+	and #ENT_ACTIVE | ENT_IFRAMES   ; active and not in iFrames
+	eor #ENT_IFRAMES                ;
+	beq @checkP2                    ;--
+	
 	lda Ent_P1_X
 	sta ox
 	lda Ent_P1_Y
@@ -644,12 +647,22 @@ F_EnemyPlayerTest:
 	sta oh
 	jsr F_BoxBoxTest
 	bcc @checkP2
-	tya
-	sta Ent_P1_Damaged
+	
+	lda sx							; Set direction flag to indicate what side 
+	cmp ox                  		; the player was hit on.
+	lda #$00						;
+	ror A							; Move the carry flag into bit7
+	and #$80                		;
+	sta Ent_P1_Damaged      		;
+	tya                     		; Set damage type and amount
+	ora Ent_P1_Damaged      		;
+	sta Ent_P1_Damaged      		;--
 	
 @checkP2:
-	lda Ent_P2_Flags
-	bpl @return
+	lda Ent_P2_Flags				; Only check collision if the player is
+	and #ENT_ACTIVE | ENT_IFRAMES   ; active and not in iFrames
+	eor #ENT_IFRAMES                ;
+	beq @return                     ;--
 	
 	lda Ent_P2_X
 	sta ox
@@ -661,8 +674,16 @@ F_EnemyPlayerTest:
 	sta oh
 	jsr F_BoxBoxTest
 	bcc @return
-	tya
-	sta Ent_P2_Damaged
+	
+	lda sx							; Set direction flag to indicate what side
+	cmp ox                  		; the player was hit on.
+	lda #$00						;
+	ror A							; Move the carry flag into bit7
+	and #$80                		;
+	sta Ent_P2_Damaged      		;
+	tya                     		; Set damage type and amount
+	ora Ent_P2_Damaged      		;
+	sta Ent_P2_Damaged      		;--
 	
 @return:
 	rts

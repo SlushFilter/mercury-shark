@@ -162,6 +162,24 @@ F_DKnightJump:	; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 	sta Ent_MoveFlags			;
 	rts							;
 
+F_DknightRecoil: ;. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+	lda #MS_RECOIL				; Set Recoil MoveState
+	sta Ent_MoveState           ;
+	lda #DKNIGHT_RECOIL_Y		; .. apply vertical recoil impulse
+	sta Ent_Vel_Y				;
+	lda #DKNIGHT_RECOIL_X		;
+	sta Ent_Vel_X				;
+	lda #$00					;
+	sta Ent_Vel_SubY            ;
+	sta Ent_Vel_SubX            ;
+	lda Ent_Damaged				; Set C to flag left or right movement
+	rol A                       ;
+	lda Ent_MoveFlags			;
+	ora #MOVE_UP | MOVE_VMOVE	; .. set vertical movement flags.
+	and #MOVE_GROUNDED ^ $FF	; .. clear grounded flag.
+	sta Ent_MoveFlags			;
+	rts							;
+	
 ; ============================================================================= 
 ; Status Code
 ; ============================================================================= 
@@ -182,6 +200,7 @@ DKnight_Status:
 MS_GROUND = $00
 MS_JUMP   = $01
 MS_FALL   = $02
+MS_RECOIL = $03
 
 DKnight_Move:
 	lda Ent_MoveState			; Jump to the current movement state logic

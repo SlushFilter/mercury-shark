@@ -90,7 +90,7 @@ Ent_ZombroPatrol:
 	sta Ent_Vel_SubX	        ; 
 	
 @bodyCheck:
-	ldy #$FF
+	ldy #$01
 	jsr F_EnemyPlayerTest
 	
 @drawZombro:
