@@ -14,6 +14,10 @@ GRAVITY	= $40	; Gravity Subpixel Y Constant
 
 ; =============================================================================
 ; F_ApplyGravity
+; 
+; Applies grapvity physics to an entity's Y and SubY velocities. It will also
+; clear the MOVE_UP flag at the apex of an upward movement to continue into a
+; fall behavior.
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; =============================================================================
 F_ApplyGravity:
@@ -30,21 +34,21 @@ F_ApplyGravity:
 	rts
 	
 @pullEnt:
-	sec
-	lda Ent_Vel_SubY
-	sbc #GRAVITY
-	sta Ent_Vel_SubY
-	lda Ent_Vel_Y
-	sbc #$00
-	sta Ent_Vel_Y
-	bpl @return
+	sec					; Entity is moving up, so velocity should be decreasing
+	lda Ent_Vel_SubY    ; .. because gravity.
+	sbc #GRAVITY        ;
+	sta Ent_Vel_SubY    ;
+	lda Ent_Vel_Y       ;
+	sbc #$00            ;
+	sta Ent_Vel_Y       ;
+	bpl @return         ;--
 	
-	lda #$00
-	sta Ent_Vel_Y
-	sta Ent_Vel_SubY
-	lda Ent_MoveFlags
-	and #(MOVE_UP ^ $FF)
-	sta Ent_MoveFlags
+	lda #$00			; Floor the velocity at zero, this also is the apex of 
+	sta Ent_Vel_Y       ; .. upward movement, so we zero out Y velocity and ..
+	sta Ent_Vel_SubY    ; .. flag downward movement.
+	lda Ent_MoveFlags   ;
+	and #(MOVE_UP ^ $FF);
+	sta Ent_MoveFlags   ;--
 	
 @return:	
 	rts
@@ -87,15 +91,15 @@ F_Collide:
 	ldy #$03			; Set bot quad
 
 @checkLeftRight:
-	lda mD
-	and #$10
-	bne @setRight
+	lda mD				; Check for left or right quad
+	and #$10			;
+	bne @setRight		;
 	tya					; Set left quad
 	and #$0A			;
 	bne @checkCol		; .. check the collision.
 @setRight:
-	tya
-	and #$05
+	tya					; Set right quad
+	and #$05			; .. then check the collision.
 @checkCol:				; Return Carry Clear if no no collision.
 	clc 				; .. otherwise return a set carry.
 	and mF              ;
@@ -106,7 +110,10 @@ F_Collide:
 	
 ; =============================================================================
 ; F_HAccelerate
-; Accelerates an entity up to a given maximum velocity.
+;
+; Applies  acceleration to  an entity's Vel_X and Vel_SubX up to a given maximum
+; velocity.
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; Arguments :
 ; A - Acceleration Rate
 ; X - Maximum whole velocity
@@ -133,8 +140,10 @@ F_HAccelerate:
 
 ; =============================================================================
 ; F_HBrake 
-; Applies a sort of frictional brake to an entity velocity.
+;
+; Applies a sort of frictional brake to an entity's Vel_X and Vel_SubX velocity.
 ; Clears the MOVE_HMOVE flag if the entity stopped.
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; Arguments :
 ; A - Braking force, or friction in subpixel velocity.
 ; C - (0) Entity Stopped (1) Entity still has velocity
@@ -160,9 +169,10 @@ F_HBrake:
 	
 ; =============================================================================
 ; F_HMove 
+;
 ; Applies a Horizontal left or right movement based on Ent direction flags and 
 ; velocity.
-;
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; Returns :
 ; F_Collide's "m" values
 ; C : (0) No collision (1) Collision
@@ -178,10 +188,11 @@ F_HMove:
 	rts
 
 ; =============================================================================
-; F_VMove 
+; F_VMove
+;
 ; Applies a Vertical up or down movement based on Ent direction flags and 
 ; velocity.
-;
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; Returns :
 ; F_Collide's "m" values, Grounds an entity when landing.
 ; C : (0) No ground (1) Ground
@@ -205,6 +216,7 @@ F_VMove:
 	
 ; =============================================================================
 ; F_MoveRightSolid
+;
 ; Attempts to move the currently processing entity to the right by a its 
 ; velocity while checking the solid blockmap.
 ;
@@ -212,10 +224,10 @@ F_VMove:
 ; collision.
 ;
 ; Takes entity width and height into consideration.
-;
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; Returns :
-;
 ; C : (0) No solid collision (1) Solid collision
+; *See F_Collide for additional collision info returns 
 ; =============================================================================
 F_MoveRightSolid:
 	clc
@@ -273,6 +285,7 @@ F_MoveRightSolid:
 
 ; =============================================================================
 ; F_MoveLeftSolid
+;
 ; Attempts to move the currently processing entity to the right by a its 
 ; velocity while checking the solid blockmap.
 ;
@@ -280,10 +293,10 @@ F_MoveRightSolid:
 ; collision.
 ;
 ; Takes entity width and height into consideration. 
-;
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; Returns :
-;
 ; C : (0) No solid collision (1) Solid collision
+; *See F_Collide for additional collision info returns 
 ; =============================================================================
 F_MoveLeftSolid:
 	sec
@@ -342,6 +355,7 @@ F_MoveLeftSolid:
 	rts
 ; =============================================================================
 ; F_MoveUpSolid
+;
 ; Attempts to move the currently processing entity  up by it's velocity while
 ; checking the solid blockmap.
 ;
@@ -349,10 +363,10 @@ F_MoveLeftSolid:
 ; collision.
 ;
 ; Takes entity height into consideration.
-;
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; Returns :
-;
 ; C : (0) No solid collision (1) Solid collision
+; *See F_Collide for additional collision info returns 
 ; =============================================================================
 F_MoveUpSolid:
 	sec					
@@ -394,17 +408,18 @@ F_MoveUpSolid:
 	rts					
 ; =============================================================================
 ; F_MoveDownSolid
-; Attempts to move the currently processing entity  up by it's velocity while
+;
+; Attempts to move the currently processing entity down by it's velocity while
 ; checking the solid blockmap.
 ;
-; If unable to move up, the entity is repositioned to the point just before 
+; If unable to move down, the entity is repositioned to the point just before 
 ; collision.
 ;
 ; Takes entity height into consideration.
-;
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; Returns :
-;
 ; C : (0) No solid collision (1) Solid collision
+; *See F_Collide for additional collision info returns 
 ; =============================================================================
 F_MoveDownSolid:
 	clc					
@@ -423,21 +438,21 @@ F_MoveDownSolid:
 	jsr F_Collide		; .. do the collision check.
 	bcc @return			; .. return if no collision.
 	
-	lda mF
-	and #$F0
-	cmp #$10
-	bne @bonk  
+	lda mF				; Check for platform special handling
+	and #$F0            ;  
+	cmp #$10            ; 
+	bne @bonk           ;--
 	
-	lda mE
-	and #$F0
-	cmp Temp_Y
-	bcc @return 
+	lda mE				; Platform handling; if only collide if Y was above the
+	and #$F0            ; ..platform prior to the move.
+	cmp Temp_Y          ;
+	bcc @return         ;--
 	
 @bonk:
 	lda #$00			; .. clear SubY and Y velocity
 	sta Ent_SubY        ;
 	sta Ent_Vel_Y       ;
-	sta Ent_Vel_SubY    ;
+	sta Ent_Vel_SubY    ;--
 	
 	sec					; .. snap to 16pixel grid 
 	lda mE              ;
@@ -450,11 +465,13 @@ F_MoveDownSolid:
 	
 ; =============================================================================
 ; F_CheckGround
-; Checks for ground directly under the entity's feet.
 ;
+; Checks for ground directly under the entity's feet.
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; Returns :
 ; Sets Entity MOVE_GROUNDED flag appropriately.
 ; C : (0) No ground (1) Ground
+; *See F_Collide for additional collision info returns 
 ; =============================================================================
 F_CheckGround:
 	lda Ent_Screen				; Get the point to check for ground against.
@@ -474,8 +491,9 @@ F_CheckGround:
 
 ; =============================================================================
 ; F_BoxBoxTest
-; Checks to see if two AABB are overlapping.
 ;
+; Checks to see if two AABB are overlapping.
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; Arguments :
 ; ox = $00	: Other X
 ; oy = $01	: Other Y
@@ -485,6 +503,7 @@ F_CheckGround:
 ; sy = $05	: Self Y
 ; sw = $06	: Self Half-Width
 ; sh = $07	: Self Full-Height
+;
 ; Returns :
 ; C : (0) No Collision (1) Collision
 ; =============================================================================
@@ -497,21 +516,22 @@ sy = $05	; Self Y
 sw = $06	; Self Half-Width
 sh = $07	; Self Full Height
 F_BoxBoxTest:
-	clc
-	lda sw
-	adc ow
-	sta ow
-	
-	clc
-	lda sh
-	adc oh
-	lsr
-	sta oh
+	clc			; Calculate total width of both AABB's
+	lda sw      ;
+	adc ow      ;
+	sta ow      ;
+	clc         ;
+	lda sh      ; Calculate total height of both AABB's
+	adc oh      ;
+	lsr         ;
+	sta oh      ; .. fall through to F_PointBoxTest to complete.
 
 ; =============================================================================
 ; F_PointBoxTest
+;
 ; Checks to see if a point is contained in the defined bounding box and returns
 ; C = 1 if they are in collision.
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; Arguments :
 ; ox = $00	: Other X
 ; oy = $01	: Other Y
@@ -581,7 +601,7 @@ F_PointBoxTest:
 ; Performs hitscans against enemy entities. If the entity is inside of the 
 ; hitscan box passed in the arguments, the Entity's Ent_Damaged value is set to
 ; the value passed in the Y register.
-;
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; Arguments :
 ; sx = $04	: Self X
 ; sy = $05	: Self Y
@@ -619,34 +639,38 @@ F_BoxEnemyTest:
 
 ; =============================================================================
 ; F_EnemyPlayerTest
+;
+; Tests an enemy hitbox against a player hitbox. The result of the collision 
+; will store Y into a player's Ent_Damaged field for later processing.
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
 ; Arguments :
 ; Y 		: Damage Type to assign to a hit entity.
 ; =============================================================================
 F_EnemyPlayerTest:
-	lda Ent_X
-	sta sx
-	lda Ent_Y
-	sta sy
-	lda Ent_Width
-	sta sw
-	lda Ent_Height
-	sta sh
+	lda Ent_X						; Init worker variables, this could be made
+	sta sx                          ; .. faster if we just use the Ent_xxx 
+	lda Ent_Y                       ; .. values of the AABB test instead.
+	sta sy                          ;
+	lda Ent_Width                   ;
+	sta sw                          ;
+	lda Ent_Height                  ;
+	sta sh                          ; --
 	
 	lda Ent_P1_Flags				; Only check collision if the player is 
 	and #ENT_ACTIVE | ENT_IFRAMES   ; active and not in iFrames
 	eor #ENT_IFRAMES                ;
-	beq @checkP2                    ;--
+	beq @checkP2                    ; --
 	
-	lda Ent_P1_X
-	sta ox
-	lda Ent_P1_Y
-	sta oy
-	lda Ent_P1_Width
-	sta ow
-	lda Ent_P1_Height
-	sta oh
-	jsr F_BoxBoxTest
-	bcc @checkP2
+	lda Ent_P1_X					; Fetch Player 1's position and size.
+	sta ox                          ;
+	lda Ent_P1_Y                    ;
+	sta oy                          ;
+	lda Ent_P1_Width                ;
+	sta ow                          ;
+	lda Ent_P1_Height               ;
+	sta oh                          ;
+	jsr F_BoxBoxTest                ; .. perform the collision check.
+	bcc @checkP2                    ; --
 	
 	lda sx							; Set direction flag to indicate what side 
 	cmp ox                  		; the player was hit on.
@@ -664,16 +688,16 @@ F_EnemyPlayerTest:
 	eor #ENT_IFRAMES                ;
 	beq @return                     ;--
 	
-	lda Ent_P2_X
-	sta ox
-	lda Ent_P2_Y
-	sta oy
-	lda Ent_P2_Width
-	sta ow
-	lda Ent_P2_Height
-	sta oh
-	jsr F_BoxBoxTest
-	bcc @return
+	lda Ent_P2_X					; Fetch Player 2's position and size.
+	sta ox                          ;
+	lda Ent_P2_Y                    ;
+	sta oy                          ;
+	lda Ent_P2_Width                ;
+	sta ow                          ;
+	lda Ent_P2_Height               ;
+	sta oh                          ;
+	jsr F_BoxBoxTest                ; .. perform the collision check.
+	bcc @return                     ; --
 	
 	lda sx							; Set direction flag to indicate what side
 	cmp ox                  		; the player was hit on.
@@ -688,7 +712,35 @@ F_EnemyPlayerTest:
 @return:
 	rts
 	
+
+; =============================================================================
+; F_ApplyKnockback
+;
+; Aplies a default knockback velocity of X:1, Y:1
+; Clears MOVE_GROUNDED for launching the entity.
+; Sets MOVE_LEFT or clears MOVE_LEFT depending on the damage direction flag of
+; Ent_Damaged 
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
+; Arguments :
+; Y 		: Damage Type to assign to a hit entity.
+; =============================================================================
+F_ApplyKnockback:
+	lda #$01					; Set default recoil to X:1, Y:1
+	sta Ent_Vel_X               ;
+	sta Ent_Vel_Y               ;
+	lda Ent_Damaged             ; .. roll the damage direciton flag into C
+	rol                         ;
+	bcc @kbRight                ; --
 	
+	lda Ent_MoveFlags           ; Handle a knockback to the left.
+	ora #MOVE_LEFT | MOVE_UP    ;
+	and #MOVE_GROUNDED ^ $FF    ; --
+	rts
+@kbRight:
+	lda Ent_MoveFlags						; Handle a knockback to the right.
+	ora #MOVE_UP                            ;
+	and #(MOVE_LEFT | MOVE_GROUDNED)^ $FF	;
+	rts                                     ; --
 	
 	
 	
