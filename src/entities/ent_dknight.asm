@@ -171,23 +171,23 @@ STATUS_DEAD = $02
 
 DKnight_Status:
 
-	lda Ent_IFrames
-	beq @checkDamaged
-	dec Ent_IFrames
-	bne @return
+	lda Ent_IFrames		; Check for active IFrames
+	beq @checkDamaged   ; .. then check for damage if we're not in IFrames
+	dec Ent_IFrames     ; .. otherwise, decrement the IFrame counter
+	bne @return         ; .. and return.
 	
 @checkDamaged:
-	lda Ent_Damaged
-	beq @return
+	lda Ent_Damaged		; Check for incoming damage 
+	beq @return         ; --
 	
-	jsr F_ApplyRecoil
-	lda #$00
-	sta Ent_Damaged
-	lda #MS_RECOIL
-	sta Ent_MoveState
+	jsr F_ApplyRecoil	; Apply recoil if we were just hit.
+	lda #$00			; .. clear the incoming damage message
+	sta Ent_Damaged     ;
+	lda #MS_RECOIL      ; .. set MS_RECOIL move state.
+	sta Ent_MoveState   ; --
 	
-	lda #$3C
-	sta Ent_IFrames
+	lda #$3C			; Set 60 frames of iframes
+	sta Ent_IFrames		; --
 	
 @return:
 	rts
