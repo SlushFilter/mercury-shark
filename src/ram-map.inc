@@ -117,7 +117,7 @@
 	Ent_13			= $33  ; Entity Auxilarry value
 	Ent_14			= $34  ; Entity Auxillary Value 
 	Ent_15			= $35  ; Entity Auxillary Value 
-	Ent_16			= $36  ; Entity Auxillary Value
+	Ent_IFrames		= $36  ; Entity IFrame Counter
 	Ent_Health		= $37  ; Entity Health
 	Ent_Damaged		= $38  ; Value indicating the damage received for the frame.
 	
@@ -236,7 +236,8 @@
 	Ent_P1_Y		= $405	; Player 1 Absolute Y
 	Ent_P1_Width    = $40C	; Player 1 Half Width
 	Ent_P1_Height	= $40D	; Player 1 Full Height
-	Ent_P1_Block	= $40E	; Player 1 last occupied tile 
+	Ent_P1_Block	= $40E	; Player 1 last occupied tile
+	Ent_P1_IFrames	= $416	; Player 1 IFrame counter
 	Ent_P1_Damaged  = $418	; Player 1 Damaged Type
 
 	Ent_P2_Flags	= $420	;
@@ -247,6 +248,7 @@
 	Ent_P2_Y		= $425	; Player 2 Absolute Y
 	Ent_P2_Width    = $42C	; Player 2 Half Width
 	Ent_P2_Height	= $42D	; Player 2 Full Height
+	Ent_P2_IFrames	= $436	; Player 2 IFrame counter
 	Ent_P2_Damaged  = $438	; Player 2 Damaged Type
 
 

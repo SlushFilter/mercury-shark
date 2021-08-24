@@ -657,9 +657,10 @@ F_EnemyPlayerTest:
 	sta sh                          ; --
 	
 	lda Ent_P1_Flags				; Only check collision if the player is 
-	and #ENT_ACTIVE | ENT_IFRAMES   ; active and not in iFrames
-	eor #ENT_IFRAMES                ;
-	beq @checkP2                    ; --
+	and #ENT_ACTIVE					; active and not in iFrames
+	beq @checkP2                    ; 
+	lda Ent_P1_IFrames				;
+	bne @checkP2                    ; --
 	
 	lda Ent_P1_X					; Fetch Player 1's position and size.
 	sta ox                          ;
@@ -675,7 +676,7 @@ F_EnemyPlayerTest:
 	lda sx							; Set direction flag to indicate what side 
 	cmp ox                  		; the player was hit on.
 	lda #$00						;
-	ror A							; Move the carry flag into bit7
+	ror 							; Move the carry flag into bit7
 	and #$80                		;
 	sta Ent_P1_Damaged      		;
 	tya                     		; Set damage type and amount
@@ -684,9 +685,11 @@ F_EnemyPlayerTest:
 	
 @checkP2:
 	lda Ent_P2_Flags				; Only check collision if the player is
-	and #ENT_ACTIVE | ENT_IFRAMES   ; active and not in iFrames
-	eor #ENT_IFRAMES                ;
-	beq @return                     ;--
+	and #ENT_ACTIVE					; active and not in iFrames
+	ora Ent_P2_IFrames				;
+	beq @return                     ;
+	lda Ent_P2_IFrames				;
+	bne @return						; --
 	
 	lda Ent_P2_X					; Fetch Player 2's position and size.
 	sta ox                          ;
@@ -702,7 +705,7 @@ F_EnemyPlayerTest:
 	lda sx							; Set direction flag to indicate what side
 	cmp ox                  		; the player was hit on.
 	lda #$00						;
-	ror A							; Move the carry flag into bit7
+	ror 							; Move the carry flag into bit7
 	and #$80                		;
 	sta Ent_P2_Damaged      		;
 	tya                     		; Set damage type and amount
@@ -714,7 +717,7 @@ F_EnemyPlayerTest:
 	
 
 ; =============================================================================
-; F_ApplyKnockback
+; F_ApplyRecoil
 ;
 ; Aplies a default knockback velocity of X:1, Y:1
 ; Clears MOVE_GROUNDED for launching the entity.
@@ -724,22 +727,30 @@ F_EnemyPlayerTest:
 ; Arguments :
 ; Y 		: Damage Type to assign to a hit entity.
 ; =============================================================================
-F_ApplyKnockback:
-	lda #$01					; Set default recoil to X:1, Y:1
+F_ApplyRecoil:
+	lda #$01					; Set default recoil to X:1, Y:2
 	sta Ent_Vel_X               ;
+	lda #$00					;
+	sta Ent_Vel_SubX            ;
+
+	lda #$03					;
 	sta Ent_Vel_Y               ;
+	lda #$40					;
+	sta Ent_Vel_SubY			;
 	lda Ent_Damaged             ; .. roll the damage direciton flag into C
 	rol                         ;
-	bcc @kbRight                ; --
+	bcc @recoilRight            ; --
 	
 	lda Ent_MoveFlags           ; Handle a knockback to the left.
 	ora #MOVE_LEFT | MOVE_UP    ;
-	and #MOVE_GROUNDED ^ $FF    ; --
+	and #MOVE_GROUNDED ^ $FF    ;
+	sta Ent_MoveFlags			; --
 	rts
-@kbRight:
+@recoilRight:
 	lda Ent_MoveFlags						; Handle a knockback to the right.
 	ora #MOVE_UP                            ;
-	and #(MOVE_LEFT | MOVE_GROUDNED)^ $FF	;
+	and #(MOVE_LEFT | MOVE_GROUNDED)^ $FF	;
+	sta Ent_MoveFlags						;
 	rts                                     ; --
 	
 	

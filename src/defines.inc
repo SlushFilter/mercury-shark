@@ -105,7 +105,6 @@ P2_ACTIVE		= $80
 ; Ent_Flags
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ENT_ACTIVE		= %10000000		; Ent is active, do process
-ENT_IFRAMES		= %01000000		; Ent is facing left
 
 ; Ent_MoveFlags
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

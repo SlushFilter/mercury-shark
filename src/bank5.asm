@@ -24,6 +24,7 @@ FRAMEMOD	= Ent_FrameMod	  - $20
 FRAMEPTR	= Ent_FramePtr	  - $20
 FRAMEPTR_LO	= Ent_FramePtr_LO - $20
 FRAMEPTR_HI	= Ent_FramePtr_HI - $20
+IFRAMES 	= Ent_IFrames 	  - $20
 
 ; =============================================================================
 ; F_DrawSprites :
@@ -34,7 +35,9 @@ F_DrawSprites:
 	
 	lda Ent_Data, x					; Loop if entity is inactive.
 	bpl @nextEnt	               	; --
-
+	lda Ent_Data + IFRAMES, x		
+	and #$01
+	bne @nextEnt
 	
 	lda Ent_Data + FRAMEPTR_LO, x	; Fetch the relevant entity data.
 	sta v0             				; 
