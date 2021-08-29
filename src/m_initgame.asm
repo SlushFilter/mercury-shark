@@ -5,7 +5,6 @@
 .include "ram-map.inc"
 .autoimport +
 
-DMARKER "### _InitGame ###"
 .scope NS_INITGAME			; Set NS_INITGAME namespace
 
 ; Init Game Local Defines
@@ -38,7 +37,6 @@ _InitGame:
 
 F_InitPlayers:
 	; TODO: Player Palettes and Proper stat loading.
-
 	lda PlayerChars
 	and #P1_ACTIVE
 	beq @initP2

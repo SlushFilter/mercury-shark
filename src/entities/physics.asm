@@ -107,7 +107,49 @@ F_Collide:
 	sec                 ;
 @return:                ;
 	rts                 ;--
+; =============================================================================
+; F_CheckInteract
+; 
+; Check the current blockmap using the current entity's X, Y and Screen
+; location for an interactable tile. Fetches an argument and tile type from 
+; the blockmap if the collision was positive. 
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+; Returns:
+;            C : (0) No Collision (1) Collided with interactable
+; ** Below returns are to be changed later when framework for doors and such is
+;    up and running! :)
+; 		    mF : Blockmap block value that was touched.
+; Ent_FrameMod : Interactable argument, for visual confirmation.
+; =============================================================================
+F_CheckInteract:
+	ldx Ent_X			; Check the blockmap at coordinate  X	
+	lda Ent_Height		; .. Y - Half the Entity height
+	lsr                 ; 
+	eor #$FF            ;
+	adc Ent_Y           ;
+	tay                 ; 
+	lda Ent_Screen      ; .. and the current screen.
+	jsr F_Collide       ; .. return if we were not touching anything.
+	bcc @return			; --
 	
+	lda mF				; If the last block we touched was solid or a platform 
+	and #$F0            ; .. just ignore it and return.
+	cmp #$10            ;
+	beq @return         ; --
+	
+	lda mC				; Otherwise, fetch the argument from the last row of the
+	ldx mD              ; .. blockmap and write it into the entity's FrameMod
+	ldy #$FF            ; .. for visual confirmation.
+	jsr F_GetBlock      ;
+	sta Ent_FrameMod	; 
+	lda mF				; 
+	sec                 ; .. and return the block type / collision mask in A
+	rts                 ; --
+	
+@return:
+	clc					; No collision, return.
+	rts					; --
+
 ; =============================================================================
 ; F_HAccelerate
 ;
@@ -260,7 +302,7 @@ F_MoveRightSolid:
 	bcc @return			;
 	
 	lda mF				; Dont collide horizontally against platforms.
-	and #$10			;
+	and #$F0			;
 	bne @noBonk			;--
 	
 	lda #$00			; .. otherwise, reset subx and veloity to #$00
@@ -328,8 +370,8 @@ F_MoveLeftSolid:
 	jsr F_Collide		; Check the collision and return if there was none
 	bcc @return			;
 	
-	lda mF				; Dont collide horizontally against platforms.
-	and #$10			;
+	lda mF				; Dont collide horizontally against "non-solids"
+	and #$F0			;
 	bne @noBonk			;--
 	
 	lda #$00			; .. otherwise, reset subx and velocity to #$00
@@ -385,7 +427,7 @@ F_MoveUpSolid:
 	bcc @return			; .. return if no collision.
 	
 	lda mF 				; Check for a platform and ignore the collision 
-	and #$10			; .. if it is a platform.
+	and #$F0			; .. if it is a non-solids.
 	bne @noBonk			;--
 	
 	and #$10
@@ -440,9 +482,13 @@ F_MoveDownSolid:
 	
 	lda mF				; Check for platform special handling
 	and #$F0            ;  
+	beq @bonk           ; .. handle normal solid
 	cmp #$10            ; 
-	bne @bonk           ;--
+	beq @bonkPlatform	; .. handle a platform solid
+	clc					;
+	bcc @return			; .. otherwise, there was no collision.
 	
+@bonkPlatform:	
 	lda mE				; Platform handling; if only collide if Y was above the
 	and #$F0            ; ..platform prior to the move.
 	cmp Temp_Y          ;
@@ -479,11 +525,20 @@ F_CheckGround:
 	ldy Ent_Y           		;
 	iny                 		;
 	jsr F_Collide				; .. check the collision
-	lda Ent_MoveFlags			;
 	bcc @clearGrounded			;
+	
+	lda mF
+	and #$F0
+	beq @grounded
+	cmp #$10
+	bne @clearGrounded
+	
+@grounded:
+	lda Ent_MoveFlags			;
 	ora #MOVE_GROUNDED			; .. flag grounded if on the ground.
 	bne @return			        ;
 @clearGrounded:					;
+	lda Ent_MoveFlags			;
 	and #MOVE_GROUNDED ^ $FF	; .. otherwise clear grounded.
 @return:                		;
 	sta Ent_MoveFlags   		; .. commit the flag change.

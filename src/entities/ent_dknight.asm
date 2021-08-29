@@ -123,11 +123,15 @@ F_DKnightWalk:	; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 	lda #DKNIGHT_FRICTION << 1	;
 	jsr F_HBrake				; Apply brake accel and return if Vel > 0
 	bcs @return					;--
-	
+
+@setWalkDir:	
 	lda Input_State				; Set move direction based on player's input.
-	and #JOY_LEFT				;
-	beq @setWalkRight           ;--
+	and #JOY_RIGHT				;
+	bne @setWalkRight           ;--
 	
+	lda Input_State				;
+	and #JOY_LEFT				;
+	beq @return					;
 	lda Ent_MoveFlags			; Set Moving Left
 	ora #MOVE_LEFT              ;
 	sta Ent_MoveFlags           ;
@@ -142,7 +146,7 @@ F_DKnightWalk:	; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 @brake:							;
 	lda #DKNIGHT_FRICTION		; Regular braking, in air or neutral on ground
 	jsr F_HBrake				; Apply brake accel and return if Vel > 0
-
+	bcc @setWalkDir
 @return:
 	rts
 	
@@ -184,9 +188,8 @@ DKnight_Status:
 	lda #$00			; .. clear the incoming damage message
 	sta Ent_Damaged     ;
 	lda #MS_RECOIL      ; .. set MS_RECOIL move state.
-	sta Ent_MoveState   ; --
-	
-	lda #$3C			; Set 60 frames of iframes
+	sta Ent_MoveState   ; 
+	lda #$3C			; .. set 60 frames of iframes
 	sta Ent_IFrames		; --
 	
 @return:
@@ -308,6 +311,7 @@ MoveState_Recoil: ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 AS_NONE = $00
 AS_ATTACK = $01
 AS_SATTACK = $02
+AS_INTERACT = $03
 
 ; Attack Constants  . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
@@ -325,10 +329,12 @@ FP_ActionStates:
 	.addr ActionState_None
 	.addr ActionState_Attack
 	.addr ActionState_SAttack
-
+	.addr ActionState_Interact
+	
 ActionState_None:		; . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; Check for B button press
 ; Check for Select button press
+; Check for Up button press
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 	lda Input_State		; Check for standard attack	
 	tay                 ;
@@ -339,6 +345,11 @@ ActionState_None:		; . . . . . . . . . . . . . . . . . . . . . . . . . . .
 	tya                 ; Check for special attack
 	and #JOY_SELECT     ;
 	bne _enterSAttack	; .. branch if player wants to special attack.
+	
+	tya					; Check to see if the player is trying to interact
+	and Input_Delta		; .. with environment (doors, switches, etc..)
+	and #JOY_UP			;
+	bne _enterInteract  ; 
 	rts                 ;--
 
 _enterAttack:
@@ -372,6 +383,12 @@ ActionState_SAttack:	; . . . . . . . . . . . . . . . . . . . . . . . . . . .
 @return:
 	rts
 
+_enterInteract:
+	jsr F_CheckInteract
+	
+ActionState_Interact:	; . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+	rts
 ; ============================================================================= 
 ; Animation Code
 ; ============================================================================= 
