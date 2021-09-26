@@ -6,9 +6,10 @@
 ; [$0020 : $003F] Entity Staging for Processing
 ; [$0040 : $0068] ** Unused **
 ; [$0069 : $0069] Reserved for UltraMinimalist
+; [$006A : $008F] ** Unused **
 ; [$0090 : $009F] Stage Data Pointers
 ; [$00A0 : $00BF] Game Mode running vars (during stages)
-; [$00C0 : $00CF] ProgramMode Vars
+; [$00C0 : $00CF] ProgramMode Vars (m0 - mF)
 ; [$00D0 : $00DF] System Globals
 ; [$00E0 : $00EF] PPU Globals
 ; [$0100 : $01FF] System Stack
